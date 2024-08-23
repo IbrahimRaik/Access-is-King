@@ -1,9 +1,14 @@
-import 'package:access_is_king/views/otpscreen.dart';
+import 'package:access_is_king/views/bid_number.dart';
+import 'package:access_is_king/views/forgot_pass_screen.dart';
 import 'package:flutter/material.dart';
+
+import '../otp_screen.dart';
 
 class SignUpScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  String? _storedPassword;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +35,7 @@ class SignUpScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Enter Your Login Details to continue',
+                      'Enter your login details to continue',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -44,7 +49,7 @@ class SignUpScreen extends StatelessWidget {
                       style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: 'Email or Phone Number',
+                        labelText: 'Phone number, username or email',
                         labelStyle: const TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.white24,
@@ -53,7 +58,7 @@ class SignUpScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: passwordController,
                       style: const TextStyle(color: Colors.white),
@@ -69,19 +74,25 @@ class SignUpScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
                         "Your login credentials will be the phone number, username, or email used when signing up. If your password has been lost, click below.",
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.left,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
-                      child: Text(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => ForgotPasswordScreen()));
+                      },
+                      child: const Text(
                         'Forgot password',
-                        style: TextStyle(color: Colors.blueAccent),
+                        style:
+                            TextStyle(color: Colors.blueAccent, fontSize: 15),
                       ),
                     ),
                   ],
@@ -94,20 +105,25 @@ class SignUpScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: TextButton(
                   onPressed: () {
-                    final emailOrPhone = emailController.text;
+                    final email = emailController.text;
                     final password = passwordController.text;
 
-                    if (emailOrPhone.isEmpty || password.isEmpty) {
-                      _showAlertDialog(context, 'Try Again',
-                          'Please enter your email/phone and password.');
-                    } else {
+                    if (_validateInput(email, password, context)) {
+                      // Store password in the variable
+                      _storedPassword = password;
+                      print(_storedPassword);
                       // Clear text fields after login attempt
                       emailController.clear();
                       passwordController.clear();
 
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => OtpScreen()));
-                      // print('Sign in with $emailOrPhone and password $password');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OtpScreen(
+                            email: email,
+                          ),
+                        ),
+                      );
                     }
                   },
                   child: const Text(
@@ -126,11 +142,10 @@ class SignUpScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: TextButton(
                   onPressed: () {
-                    // Clear text fields when cancel is pressed
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => SecurityPinPage()));
                     emailController.clear();
                     passwordController.clear();
-
-                    Navigator.pop(context);
                   },
                   child: const Text(
                     'Cancel',
@@ -148,6 +163,27 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 
+  bool _validateInput(String email, String password, context) {
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (email.isEmpty) {
+      _showAlertDialog(context, 'Validation Error', 'Please enter your email.');
+      return false;
+    } else if (!emailRegex.hasMatch(email)) {
+      _showAlertDialog(
+          context, 'Validation Error', 'Please enter a valid email address.');
+      return false;
+    } else if (password.isEmpty) {
+      _showAlertDialog(
+          context, 'Validation Error', 'Please enter your password.');
+      return false;
+    } else if (password.length < 6) {
+      _showAlertDialog(context, 'Validation Error',
+          'Password must be at least 6 characters long.');
+      return false;
+    }
+    return true;
+  }
+
   void _showAlertDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
@@ -156,11 +192,11 @@ class SignUpScreen extends StatelessWidget {
           backgroundColor: Colors.black,
           title: Text(
             title,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Text(
             message,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           actions: [
             SizedBox(
@@ -172,7 +208,7 @@ class SignUpScreen extends StatelessWidget {
                 style: TextButton.styleFrom(
                   backgroundColor: Colors.black,
                 ),
-                child: Text(
+                child: const Text(
                   'OK',
                   style: TextStyle(color: Colors.blueAccent),
                 ),
